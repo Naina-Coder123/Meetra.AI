@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/form";
 
 import { AgentGetOne } from "../../types";
-import { agentsInsertSchema } from "../../schemas";
+import { agentsInsertSchema } from "../../schema";
 
 interface AgentFormProps {
   onSuccess?: () => void;
