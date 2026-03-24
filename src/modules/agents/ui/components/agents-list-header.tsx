@@ -8,9 +8,8 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 import { NewAgentDialog } from "./new-agent-dialog";
-import { AgentsSearchFilter } from "./agents-search-filter";
+import { AgentsSearchFilter } from "./agent-search-filter";
 import { useAgentsFilters } from "../../hooks/use-agents-filters";
-
 export const AgentsListHeader = () => {
   const [filters, setFilters] = useAgentsFilters();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
