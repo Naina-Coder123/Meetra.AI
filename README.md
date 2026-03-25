@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Meet AI
 
-## Getting Started
+AI-powered video call application with real-time agents, meeting summaries, and post-call features.
 
-First, run the development server:
+## Features
+
+- AI-powered video calls with custom agents
+- Real-time video & chat using Stream SDK
+- Automatic meeting summaries & transcripts
+- Smart transcript search & video playback
+- Subscription management with Polar
+- Authentication with Better Auth
+- Mobile responsive design
+- ⚙️ Background jobs with Inngest
+
+## Tech Stack
+
+- Next.js 15
+- React 19
+- Tailwind v4
+- Shadcn/ui
+- tRPC
+- DrizzleORM
+- Neon Database
+- OpenAI
+- Stream Video & Chat
+- Better Auth
+- Inngest
+- Polar
+
+## Development Flow
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+# Install dependencies (use --legacy-peer-deps for React 19 compatibility)
+npm install --legacy-peer-deps
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Start development servers
+npm run dev          # Start Next.js development server
+npm run dev:webhook  # Start webhook server (requires ngrok static domain in package.json)
+npx inngest-cli@latest dev  # Start Inngest development server
