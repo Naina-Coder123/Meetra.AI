@@ -7,7 +7,7 @@ import { db } from "@/db";
 import { agents, meetings, user } from "@/db/schema";
 import { generateAvatarUri } from "@/lib/avatar";
 import { streamVideo } from "@/lib/stream-video";
-import { createTRPCRouter, premiumProcedure, protectedProcedure } from "@/trpc/init";
+import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, MIN_PAGE_SIZE } from "@/constants";
 
 import { MeetingStatus, StreamTranscriptItem } from "../types";
@@ -24,6 +24,7 @@ export const meetingsRouter = createTRPCRouter({
 
     return token;
   }),
+
   getTranscript: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input, ctx }) => {
@@ -52,9 +53,7 @@ export const meetingsRouter = createTRPCRouter({
           return [];
         });
 
-      const speakerIds = [
-        ...new Set(transcript.map((item) => item.speaker_id)),
-      ];
+      const speakerIds = [...new Set(transcript.map((item) => item.speaker_id))];
 
       const userSpeakers = await db
         .select()
@@ -110,23 +109,24 @@ export const meetingsRouter = createTRPCRouter({
             image: speaker.image,
           },
         };
-      })
+      });
 
       return transcriptWithSpeakers;
     }),
+
   generateToken: protectedProcedure.mutation(async ({ ctx }) => {
     await streamVideo.upsertUsers([
       {
         id: ctx.auth.user.id,
         name: ctx.auth.user.name,
         role: "admin",
-        image: 
+        image:
           ctx.auth.user.image ??
           generateAvatarUri({ seed: ctx.auth.user.name, variant: "initials" }),
       },
     ]);
 
-    const expirationTime = Math.floor(Date.now() / 1000) + 3600; // 1 hour
+    const expirationTime = Math.floor(Date.now() / 1000) + 3600;
     const issuedAt = Math.floor(Date.now() / 1000) - 60;
 
     const token = streamVideo.generateUserToken({
@@ -137,6 +137,7 @@ export const meetingsRouter = createTRPCRouter({
 
     return token;
   }),
+
   remove: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
@@ -159,6 +160,7 @@ export const meetingsRouter = createTRPCRouter({
 
       return removedMeeting;
     }),
+
   update: protectedProcedure
     .input(meetingsUpdateSchema)
     .mutation(async ({ ctx, input }) => {
@@ -182,7 +184,8 @@ export const meetingsRouter = createTRPCRouter({
 
       return updatedMeeting;
     }),
-  create: premiumProcedure("meetings")
+
+  create: protectedProcedure
     .input(meetingsInsertSchema)
     .mutation(async ({ input, ctx }) => {
       const [createdMeeting] = await db
@@ -199,7 +202,7 @@ export const meetingsRouter = createTRPCRouter({
           created_by_id: ctx.auth.user.id,
           custom: {
             meetingId: createdMeeting.id,
-            meetingName: createdMeeting.name
+            meetingName: createdMeeting.name,
           },
           settings_override: {
             transcription: {
@@ -241,30 +244,32 @@ export const meetingsRouter = createTRPCRouter({
 
       return createdMeeting;
     }),
+
   getOne: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input, ctx }) => {
-    const [existingMeeting] = await db
-      .select({
-        ...getTableColumns(meetings),
-        agent: agents,
-        duration: sql<number>`EXTRACT(EPOCH FROM (ended_at - started_at))`.as("duration"),
-      })
-      .from(meetings)
-      .innerJoin(agents, eq(meetings.agentId, agents.id))
-      .where(
-        and(
-          eq(meetings.id, input.id),
-          eq(meetings.userId, ctx.auth.user.id),
-        )
-      );
+      const [existingMeeting] = await db
+        .select({
+          ...getTableColumns(meetings),
+          agent: agents,
+          duration: sql<number>`EXTRACT(EPOCH FROM (ended_at - started_at))`.as("duration"),
+        })
+        .from(meetings)
+        .innerJoin(agents, eq(meetings.agentId, agents.id))
+        .where(
+          and(
+            eq(meetings.id, input.id),
+            eq(meetings.userId, ctx.auth.user.id),
+          )
+        );
 
-    if (!existingMeeting) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Meeting not found" });
-    }
+      if (!existingMeeting) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Meeting not found" });
+      }
 
-    return existingMeeting;
-  }),
+      return existingMeeting;
+    }),
+
   getMany: protectedProcedure
     .input(
       z.object({
@@ -308,7 +313,7 @@ export const meetingsRouter = createTRPCRouter({
         )
         .orderBy(desc(meetings.createdAt), desc(meetings.id))
         .limit(pageSize)
-        .offset((page - 1) * pageSize)
+        .offset((page - 1) * pageSize);
 
       const [total] = await db
         .select({ count: count() })
