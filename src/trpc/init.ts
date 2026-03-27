@@ -30,5 +30,4 @@ export const protectedProcedure = baseProcedure.use(async ({ ctx, next }) => {
   return next({ ctx: { ...ctx, auth: session } });
 });
 
-export const premiumProcedure = (...args: ["meetings" | "agents"]) =>
-  protectedProcedure;
+export const premiumProcedure = protectedProcedure;
