@@ -5,15 +5,12 @@ import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
   Call,
-  CallingState,
   StreamCall,
   StreamVideo,
   StreamVideoClient,
 } from "@stream-io/video-react-sdk";
 
 import { useTRPC } from "@/trpc/client";
-
-
 import { CallUI } from "./call-ui";
 
 interface Props {
@@ -22,7 +19,7 @@ interface Props {
   userId: string;
   userName: string;
   userImage: string;
-};
+}
 
 export const CallConnect = ({
   meetingId,
@@ -33,50 +30,66 @@ export const CallConnect = ({
 }: Props) => {
   const trpc = useTRPC();
   const { mutateAsync: generateToken } = useMutation(
-    trpc.meetings.generateToken.mutationOptions(),
+    trpc.meetings.generateToken.mutationOptions()
   );
 
   const [client, setClient] = useState<StreamVideoClient>();
-  useEffect(() => {
-    const _client = new StreamVideoClient({
-      apiKey: process.env.NEXT_PUBLIC_STREAM_VIDEO_API_KEY!,
-      user: {
-        id: userId,
-        name: userName,
-        image: userImage,
-      },
-      tokenProvider: generateToken,
-    });
+  const [call, setCall] = useState<Call>();
+  const [loading, setLoading] = useState(true);
 
-    setClient(_client);
+  useEffect(() => {
+    let mounted = true;
+    let _client: StreamVideoClient | undefined;
+    let _call: Call | undefined;
+
+    const init = async () => {
+      try {
+        _client = new StreamVideoClient({
+          apiKey: process.env.NEXT_PUBLIC_STREAM_VIDEO_API_KEY!,
+          user: {
+            id: userId,
+            name: userName,
+            image: userImage,
+          },
+          tokenProvider: generateToken,
+        });
+
+        _call = _client.call("default", meetingId);
+
+        await _call.camera.disable();
+        await _call.microphone.disable();
+
+        if (mounted) {
+          setClient(_client);
+          setCall(_call);
+        }
+      } catch (error) {
+        console.error("CALL CONNECT ERROR:", error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    init();
 
     return () => {
-      _client.disconnectUser();
-      setClient(undefined);
+      mounted = false;
+
+      if (_call) {
+        void _call.leave().catch(() => {});
+      }
+
+      if (_client) {
+        void _client.disconnectUser().catch(() => {});
+      }
     };
-  }, [userId, userName, userImage, generateToken]);
+  }, [meetingId, userId, userName, userImage, generateToken]);
 
-  const [call, setCall] = useState<Call>();
-  useEffect(() => {
-      if (!client) return;
-
-      const _call = client.call("default", meetingId);
-      _call.camera.disable();
-      _call.microphone.disable();
-      setCall(_call);
-
-      return () => {
-        if (_call.state.callingState !== CallingState.LEFT) {
-          _call.leave();
-          _call.endCall();
-          setCall(undefined);
-        }
-      };
-  }, [client, meetingId]);
-
-  if (!client || !call) {
+  if (loading || !client || !call) {
     return (
-      <div className="flex h-screen items-center justify-center bg-radial from-sidebar-accent to-sidebar">
+      <div className="flex h-screen items-center justify-center bg-black">
         <LoaderIcon className="size-6 animate-spin text-white" />
       </div>
     );
